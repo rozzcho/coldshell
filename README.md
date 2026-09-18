@@ -1,5 +1,7 @@
 # coldshell
 
+**you vs you**
+
 Put money on a period of your own life, and prove you showed up for it.
 
 You stake USDC and enter a **shell** — seven days, or a month. Every day inside it you record
@@ -18,8 +20,9 @@ Two jobs, both real:
   final film impossible to backdate — anyone can check that the clip you claim to have recorded
   on the third day really did exist on the third day.
 
-What the chain does *not* do: judge whether the video is a real diary. That is the code check,
-and it runs on our server. We say so plainly rather than pretending otherwise.
+Both matter more than they look. Our only income is the stakes of people who did not finish —
+which means we have a financial reason to want you to fail. Putting the record somewhere we
+cannot edit is what makes that harmless.
 
 ## The daily code
 
