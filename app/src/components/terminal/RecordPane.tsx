@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { QUESTIONS, questionOfTheDay } from '../../questions'
 import { ClipRecorder, CONSTRAINTS, MAX_MS, MIN_MS, clock, mb, pickMimeType, type Recording } from '../../lib/recorder'
 import { useCommands, useScrollOutput } from './chips'
 
@@ -25,6 +26,8 @@ function reason(err: unknown) {
 export function RecordPane({ active }: { active: boolean }) {
   const [stage, setStage] = useState<Stage>({ kind: 'idle' })
   const [elapsed, setElapsed] = useState(0)
+  // Questions asked so far, oldest first. The first is today's, the same one everybody gets.
+  const [asked, setAsked] = useState<number[]>([])
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const recorderRef = useRef<ClipRecorder | null>(null)
@@ -87,10 +90,14 @@ export function RecordPane({ active }: { active: boolean }) {
   const longEnough = elapsed >= MIN_MS
   const open = stage.kind === 'ready' || stage.kind === 'recording' || stage.kind === 'done'
 
+  const askAnother = () =>
+    setAsked((list) => [...list, (questionOfTheDay() + list.length) % QUESTIONS.length])
+
   useCommands(
     {
-      chips:
-        stage.kind === 'idle' || stage.kind === 'error'
+      chips: [
+        { key: 'example', label: 'example', onClick: askAnother },
+        ...(stage.kind === 'idle' || stage.kind === 'error'
           ? [{ key: 'camera', label: 'camera', onClick: openCamera, disabled: !mimeType }]
           : stage.kind === 'asking'
             ? [{ key: 'wait', label: 'waiting…', disabled: true }]
@@ -105,17 +112,23 @@ export function RecordPane({ active }: { active: boolean }) {
                       disabled: !longEnough,
                     },
                   ]
-                : [
-                    { key: 'again', label: 'record again', onClick: start },
-                    { key: 'seal', label: 'seal', tone: 'yes' as const, disabled: true },
-                  ],
-      back: stage.kind === 'done' ? () => setStage({ kind: 'ready' }) : undefined,
+                  : [
+                      { key: 'again', label: 'record again', onClick: start },
+                      { key: 'seal', label: 'seal', tone: 'yes' as const, disabled: true },
+                    ]),
+      ],
+      back:
+        asked.length > 0
+          ? () => setAsked((list) => list.slice(0, -1))
+          : stage.kind === 'done'
+            ? () => setStage({ kind: 'ready' })
+            : undefined,
     },
-    [stage.kind, longEnough, elapsed, mimeType],
+    [stage.kind, longEnough, elapsed, mimeType, asked.length],
     active,
   )
 
-  useScrollOutput([stage.kind])
+  useScrollOutput([stage.kind, asked.length])
 
   return (
     <>
@@ -156,6 +169,13 @@ export function RecordPane({ active }: { active: boolean }) {
           </p>
         )}
       </div>
+
+      {asked.map((index, i) => (
+        <div className="term-entry" key={`${index}-${i}`}>
+          <p className="term-prompt">example</p>
+          <p className="term-line">{QUESTIONS[index]}</p>
+        </div>
+      ))}
 
       {stage.kind === 'done' && (
         <div className="term-block">

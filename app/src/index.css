@@ -15,8 +15,6 @@
   --error: #ff6b61;
   /* The echoed command line, so each step is easy to tell apart. */
   --command: #7a9cff;
-  /* The wordmark's blue. It does not change with the theme. */
-  --brand: #0024c0;
   /* Wallet and Discord keep their own colours. */
   --wallet: #512da8;
   --wallet-hover: #3b1f82;
@@ -972,7 +970,8 @@ button.nav-link:focus-visible {
   font-weight: 400;
   line-height: 1;
   letter-spacing: -0.01em;
-  color: var(--brand);
+  /* The same blue as an echoed command: the name is a command too. */
+  color: var(--command);
   cursor: pointer;
   transition: color 250ms ease;
 }
