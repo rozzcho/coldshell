@@ -14,7 +14,7 @@ type TabKey = 'record' | 'mine' | 'next' | 'community' | 'start' | 'rules'
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'record', label: 'record' },
   { key: 'mine', label: 'my challenge' },
-  { key: 'next', label: 'next challenge' },
+  { key: 'next', label: 'register' },
   { key: 'community', label: 'community' },
   { key: 'start', label: 'how to start' },
   { key: 'rules', label: 'rules' },
@@ -104,7 +104,11 @@ export function Terminal({ onTint }: { onTint: (colour: string) => void }) {
               throw the conversation away. Only the visible one owns the command bar. */}
           <div className="term-out" ref={outRef}>
             <div hidden={tab !== 'record'}>
-              <RecordPane key={sessions.record} active={tab === 'record'} />
+              <RecordPane
+                key={sessions.record}
+                active={tab === 'record'}
+                onRegister={() => setTab('next')}
+              />
             </div>
             {publicKey && (
               <div hidden={tab !== 'mine'}>

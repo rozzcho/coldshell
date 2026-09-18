@@ -48,7 +48,7 @@ function Days({ sealed, total }: { sealed: number; total: number }) {
  * while recording rather than read back from the file — a WebM from MediaRecorder does not carry
  * its own.
  */
-export function RecordPane({ active }: { active: boolean }) {
+export function RecordPane({ active, onRegister }: { active: boolean; onRegister: () => void }) {
   const { publicKey } = useWallet()
   const [stage, setStage] = useState<Stage>({ kind: 'idle' })
   const [elapsed, setElapsed] = useState(0)
@@ -64,6 +64,10 @@ export function RecordPane({ active }: { active: boolean }) {
   const run = progress()
   // Sealing is not built, so nobody has sealed a day. This becomes a read of the chain.
   const sealed = 0
+  // Enrolment is not built either. This becomes a read of the participant account.
+  const enrolled = false
+  // Anyone may open the camera and record; only sealing needs a wallet and a place in a shell.
+  const missing = !publicKey ? 'wallet' : !enrolled ? 'shell' : null
 
   const release = useCallback(() => {
     streamRef.current?.getTracks().forEach((track) => track.stop())
@@ -170,11 +174,12 @@ export function RecordPane({ active }: { active: boolean }) {
                     // Sealing writes to the chain, so it needs a wallet before anything else.
                     { key: 'seal', label: 'seal', tone: 'yes' as const, disabled: true },
                   ]),
+        ...(cameraRun && missing === 'shell' ? [{ key: 'register', label: 'register', onClick: onRegister }] : []),
         ...(cameraRun ? [{ key: 'example', label: 'example', onClick: askAnother }] : []),
       ],
       back: log.length > 0 ? back : undefined,
     },
-    [stage.kind, longEnough, elapsed, mimeType, log.length, cameraRun],
+    [stage.kind, longEnough, elapsed, mimeType, log.length, cameraRun, missing],
     active,
   )
 
@@ -220,9 +225,11 @@ export function RecordPane({ active }: { active: boolean }) {
                     )}
                   </dd>
                 </dl>
-                {!publicKey && stage.kind !== 'error' && (
+                {missing && stage.kind !== 'error' && (
                   <p className="term-line term-bad">
-                    connect a wallet first — a recording cannot be sealed without one.
+                    {missing === 'wallet'
+                      ? 'connect a wallet first — a recording cannot be sealed without one.'
+                      : `you are not in shell ${now.shell}. register to start one.`}
                   </p>
                 )}
                 {stage.kind !== 'error' && (
