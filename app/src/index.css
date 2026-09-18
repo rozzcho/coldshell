@@ -1484,3 +1484,46 @@ button.nav-link:focus-visible {
     animation: none;
   }
 }
+
+/* A line you type into: the caret is drawn, so it matches the rest of the output. */
+.term-input {
+  display: flex;
+  align-items: baseline;
+  gap: 1ch;
+  margin: 0;
+}
+
+.term-input-label {
+  color: var(--muted-text);
+}
+
+.term-input input {
+  min-width: 1ch;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  caret-color: transparent;
+  outline: none;
+}
+
+.term-cursor {
+  width: 0.6em;
+  height: 1.1em;
+  margin-left: -0.6ch;
+  background: currentColor;
+  animation: term-blink 1.1s step-end infinite;
+}
+
+@keyframes term-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .term-cursor {
+    animation: none;
+  }
+}
