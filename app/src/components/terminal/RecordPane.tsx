@@ -57,6 +57,8 @@ export function RecordPane({ active, onRegister }: { active: boolean; onRegister
   const [stage, setStage] = useState<Stage>({ kind: 'idle' })
   const [elapsed, setElapsed] = useState(0)
   const [log, setLog] = useState<Entry[]>([])
+  // Whether the light is actually on, as opposed to whether the command has ever been run.
+  const [cameraOn, setCameraOn] = useState(false)
   const nextId = useRef(0)
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -83,6 +85,7 @@ export function RecordPane({ active, onRegister }: { active: boolean; onRegister
         (fraction) => setStage({ kind: 'sealing', clip, done: fraction }),
       )
       setStage({ kind: 'sealed', clip, stored })
+      release()
     } catch (err) {
       setStage({ kind: 'error', message: err instanceof Error ? err.message : String(err) })
     }
@@ -91,6 +94,7 @@ export function RecordPane({ active, onRegister }: { active: boolean; onRegister
   const release = useCallback(() => {
     streamRef.current?.getTracks().forEach((track) => track.stop())
     streamRef.current = null
+    setCameraOn(false)
   }, [])
 
   useEffect(() => release, [release])
@@ -108,6 +112,7 @@ export function RecordPane({ active, onRegister }: { active: boolean; onRegister
     setStage({ kind: 'asking' })
     try {
       streamRef.current = await navigator.mediaDevices.getUserMedia(CONSTRAINTS)
+      setCameraOn(true)
       setStage({ kind: 'ready' })
     } catch (err) {
       setStage({ kind: 'error', message: reason(err) })
@@ -157,7 +162,6 @@ export function RecordPane({ active, onRegister }: { active: boolean; onRegister
   }, [stage.kind])
 
   const longEnough = elapsed >= MIN_MS
-  const cameraRun = log.some((entry) => entry.command === 'camera')
 
   // Back takes one command off the scrollback; dropping the camera closes it.
   const back = () => {
@@ -173,7 +177,7 @@ export function RecordPane({ active, onRegister }: { active: boolean; onRegister
   useCommands(
     {
       chips: [
-        ...(!cameraRun || stage.kind === 'error'
+        ...(!cameraOn || stage.kind === 'error'
           ? [{ key: 'camera', label: 'camera', onClick: openCamera, disabled: !mimeType }]
           : stage.kind === 'asking'
             ? [{ key: 'wait', label: 'waiting…', disabled: true }]
@@ -205,12 +209,12 @@ export function RecordPane({ active, onRegister }: { active: boolean; onRegister
                           },
                         ]
                       : []),
-        ...(cameraRun && missing === 'shell' ? [{ key: 'register', label: 'register', onClick: onRegister }] : []),
-        ...(cameraRun ? [{ key: 'example', label: 'example', onClick: askAnother }] : []),
+        ...(cameraOn && missing === 'shell' ? [{ key: 'register', label: 'register', onClick: onRegister }] : []),
+        ...(cameraOn ? [{ key: 'example', label: 'example', onClick: askAnother }] : []),
       ],
       back: log.length > 0 ? back : undefined,
     },
-    [stage.kind, longEnough, elapsed, mimeType, log.length, cameraRun, missing, publicKey],
+    [stage.kind, longEnough, elapsed, mimeType, log.length, cameraOn, missing, publicKey],
     active,
   )
 
@@ -249,21 +253,23 @@ export function RecordPane({ active, onRegister }: { active: boolean; onRegister
                       'asking…'
                     ) : stage.kind === 'error' ? (
                       <span className="term-bad">{stage.message}</span>
-                    ) : (
+                    ) : cameraOn ? (
                       <span className="term-state" data-state="ok">
                         ok
                       </span>
+                    ) : (
+                      <span className="term-dim">closed</span>
                     )}
                   </dd>
                 </dl>
-                {missing && stage.kind !== 'error' && (
+                {missing && cameraOn && (
                   <p className="term-line term-bad">
                     {missing === 'wallet'
                       ? 'connect a wallet first — a recording cannot be sealed without one.'
                       : `you are not in shell ${now.shell}. register to start one.`}
                   </p>
                 )}
-                {stage.kind !== 'error' && (
+                {cameraOn && (
                   <div className="record-stage">
                     <video ref={videoRef} muted playsInline className="record-preview" />
                     {stage.kind === 'recording' && (
