@@ -7,12 +7,14 @@ import { DiscordButton } from '../DiscordButton'
 import { ChipBar, ChipProvider, type Commands } from './chips'
 import { CommunityPane } from './CommunityPane'
 import { MinePane } from './MinePane'
+import { RecordPane } from './RecordPane'
 import { NextPane } from './NextPane'
 import { RulesPane, StartPane } from './DocsPane'
 
-type TabKey = 'mine' | 'next' | 'community' | 'start' | 'rules'
+type TabKey = 'record' | 'mine' | 'next' | 'community' | 'start' | 'rules'
 
 const TABS: { key: TabKey; label: string }[] = [
+  { key: 'record', label: 'record' },
   { key: 'mine', label: 'my challenge' },
   { key: 'next', label: 'next challenge' },
   { key: 'community', label: 'community' },
@@ -42,10 +44,11 @@ function useDiscord() {
 export function Terminal({ onTint }: { onTint: (colour: string) => void }) {
   const { publicKey } = useWallet()
   const discord = useDiscord()
-  const [tab, setTab] = useState<TabKey>('next')
+  const [tab, setTab] = useState<TabKey>('record')
   const [commands, setCommands] = useState<Commands>({ chips: [] })
   // One counter per tab: resetting remounts that pane only, so you stay where you are.
   const [sessions, setSessions] = useState<Record<TabKey, number>>({
+    record: 0,
     mine: 0,
     next: 0,
     community: 0,
@@ -119,6 +122,9 @@ export function Terminal({ onTint }: { onTint: (colour: string) => void }) {
           {/* Every pane stays mounted: stepping into the rules mid-registration must not
               throw the conversation away. Only the visible one owns the command bar. */}
           <div className="term-out" ref={outRef}>
+            <div hidden={tab !== 'record'}>
+              <RecordPane key={sessions.record} active={tab === 'record'} />
+            </div>
             {publicKey && (
               <div hidden={tab !== 'mine'}>
                 <MinePane key={sessions.mine} active={tab === 'mine'} />
