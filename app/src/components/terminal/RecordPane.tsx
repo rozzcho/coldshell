@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { QUESTIONS, questionOfTheDay } from '../../questions'
 import { ClipRecorder, CONSTRAINTS, MAX_MS, MIN_MS, clock, mb, pickMimeType, type Recording } from '../../lib/recorder'
-import { shellNow } from '../../lib/shell'
+import { progress, today } from '../../lib/shell'
 import { useCommands, useScrollOutput } from './chips'
 
 type Stage =
@@ -36,7 +36,9 @@ export function RecordPane({ active }: { active: boolean }) {
   const recorderRef = useRef<ClipRecorder | null>(null)
 
   const mimeType = pickMimeType()
-  const shell = shellNow()
+  const now = today()
+  // No enrolment yet, so this is the week's own count; once there is one it becomes day 8 of 14.
+  const run = progress()
 
   const release = useCallback(() => {
     streamRef.current?.getTracks().forEach((track) => track.stop())
@@ -142,7 +144,7 @@ export function RecordPane({ active }: { active: boolean }) {
 
   return (
     <>
-      <p className="term-prompt">record --shell {shell.shell}</p>
+      <p className="term-prompt">record --shell {now.shell}</p>
 
       {!mimeType ? (
         <p className="term-line term-bad">this browser cannot record. use chrome.</p>
@@ -150,7 +152,7 @@ export function RecordPane({ active }: { active: boolean }) {
         <dl className="term-rows">
           <dt>date</dt>
           <dd>
-            {shell.date} {shell.weekday} ({shell.day}/{shell.days})
+            {now.date} {now.weekday} ({run.day}/{run.days})
           </dd>
           <dt>format</dt>
           <dd>{mimeType}</dd>
