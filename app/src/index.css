@@ -958,52 +958,53 @@ button.nav-link:focus-visible {
   text-align: center;
 }
 
-/* The logo is the name itself: the serif, in blue, in both themes. */
+/* The title line: the name in the command's blue, what it is for in the page's ink. */
 .wordmark {
-  display: block;
-  margin: 0 auto;
+  margin: 0;
+  font-family: 'Instrument Serif', 'Playfair Display', Georgia, serif;
+  font-size: clamp(30px, 4.4vw, 64px);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+.wordmark-name {
   padding: 0;
   border: 0;
   background: none;
-  font-family: 'Instrument Serif', 'Playfair Display', Georgia, serif;
-  font-size: clamp(34px, 5vw, 72px);
-  font-weight: 400;
-  line-height: 1;
-  letter-spacing: -0.01em;
+  font: inherit;
   /* The same blue as an echoed command: the name is a command too. */
   color: var(--command);
   cursor: pointer;
   transition: color 250ms ease;
 }
 
-/* The three dots lend the wordmark their colour for a moment. */
-.wordmark[data-tint='close'] {
+.wordmark-slogan {
+  color: var(--cyan);
+}
+
+/* The three dots lend the name their colour for a moment. */
+.wordmark-name[data-tint='close'] {
   color: #ff5f57;
 }
 
-.wordmark[data-tint='min'] {
+.wordmark-name[data-tint='min'] {
   color: #febc2e;
 }
 
-.wordmark[data-tint='max'] {
+.wordmark-name[data-tint='max'] {
   color: #28c840;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .wordmark {
+  .wordmark-name {
     transition: none;
   }
 }
 
-.tagline-pitch {
-  margin: 0.2em 0 0;
-  font-size: clamp(13px, 1.3vw, 18px);
-  letter-spacing: 0.08em;
-  text-transform: lowercase;
-}
-
 .tagline-how {
-  margin: 6px 0 0;
+  margin: 0.55em 0 0;
   color: var(--muted-text);
   font-size: clamp(11px, 1.1vw, 15px);
   line-height: 1.5;

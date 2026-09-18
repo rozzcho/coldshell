@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useWallet } from '@solana/wallet-adapter-react'
 import { QUESTIONS, questionOfTheDay } from '../../questions'
 import { ClipRecorder, CONSTRAINTS, MAX_MS, MIN_MS, clock, mb, pickMimeType, type Recording } from '../../lib/recorder'
 import { useCommands, useScrollOutput } from './chips'
@@ -24,6 +25,7 @@ function reason(err: unknown) {
  * here rather than read back from the file — a WebM from MediaRecorder does not carry its own.
  */
 export function RecordPane({ active }: { active: boolean }) {
+  const { publicKey } = useWallet()
   const [stage, setStage] = useState<Stage>({ kind: 'idle' })
   const [elapsed, setElapsed] = useState(0)
   // Questions asked so far, oldest first. The first is today's, the same one everybody gets.
@@ -96,7 +98,6 @@ export function RecordPane({ active }: { active: boolean }) {
   useCommands(
     {
       chips: [
-        { key: 'example', label: 'example', onClick: askAnother },
         ...(stage.kind === 'idle' || stage.kind === 'error'
           ? [{ key: 'camera', label: 'camera', onClick: openCamera, disabled: !mimeType }]
           : stage.kind === 'asking'
@@ -114,8 +115,15 @@ export function RecordPane({ active }: { active: boolean }) {
                   ]
                   : [
                       { key: 'again', label: 'record again', onClick: start },
-                      { key: 'seal', label: 'seal', tone: 'yes' as const, disabled: true },
+                      {
+                        key: 'seal',
+                        label: 'seal',
+                        tone: 'yes' as const,
+                        // Sealing writes to the chain, so it needs a wallet before anything else.
+                        disabled: true,
+                      },
                     ]),
+        { key: 'example', label: 'example', onClick: askAnother },
       ],
       back:
         asked.length > 0
@@ -124,7 +132,7 @@ export function RecordPane({ active }: { active: boolean }) {
             ? () => setStage({ kind: 'ready' })
             : undefined,
     },
-    [stage.kind, longEnough, elapsed, mimeType, asked.length],
+    [stage.kind, longEnough, elapsed, mimeType, asked.length, publicKey],
     active,
   )
 
@@ -188,9 +196,13 @@ export function RecordPane({ active }: { active: boolean }) {
             <dt>sha256</dt>
             <dd>{stage.clip.sha256.slice(0, 16)}…</dd>
           </dl>
-          <p className="term-line term-dim">
-            nothing has left this browser yet. sealing it is the next thing to build.
-          </p>
+          {publicKey ? (
+            <p className="term-line term-dim">
+              nothing has left this browser yet. sealing it is the next thing to build.
+            </p>
+          ) : (
+            <p className="term-line term-bad">connect a wallet before sealing.</p>
+          )}
         </div>
       )}
     </>

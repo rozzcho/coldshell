@@ -16,6 +16,12 @@ let theme: Theme = (() => {
 
 function apply() {
   document.documentElement.dataset.theme = theme
+  // The mark in the tab follows too: the lighter blue reads on a dark browser chrome.
+  const suffix = theme === 'dark' ? '-dark' : ''
+  document.querySelector<HTMLLinkElement>('link[rel="icon"]')?.setAttribute('href', `/favicon${suffix}.png`)
+  document
+    .querySelector<HTMLLinkElement>('link[rel="apple-touch-icon"]')
+    ?.setAttribute('href', `/apple-touch-icon${suffix}.png`)
 }
 
 // Applied as soon as this module loads, before the first render, so the page never flashes.
