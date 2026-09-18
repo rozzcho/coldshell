@@ -1,0 +1,45 @@
+use anchor_lang::prelude::*;
+
+#[error_code]
+pub enum ErrorCode {
+    #[msg("Unknown challenge track")]
+    InvalidTrack,
+    #[msg("Multiply must be between 1 and 10")]
+    InvalidMultiply,
+    #[msg("Registration for this challenge is not open")]
+    RegistrationClosed,
+    #[msg("Registration must be co-signed by the verifier")]
+    InvalidVerifier,
+    #[msg("That day is not part of this challenge")]
+    InvalidDay,
+    #[msg("That day has not started yet")]
+    DayNotStarted,
+    #[msg("Progress can no longer be recorded for this challenge")]
+    RecordingClosed,
+    #[msg("Results are not open yet: the challenge or its record window is still running")]
+    ChallengeNotOver,
+    #[msg("This participant was already counted")]
+    AlreadyTallied,
+    #[msg("Every participant must be counted first")]
+    NotFinalized,
+    #[msg("Only participants who passed every day can claim")]
+    NotAWinner,
+    #[msg("Already claimed")]
+    AlreadyClaimed,
+    #[msg("Everyone must claim before fees can be withdrawn")]
+    ClaimsPending,
+    #[msg("This challenge has winners, so nothing rolls over")]
+    NothingToRollOver,
+    #[msg("The prize pool already rolled over")]
+    AlreadyRolledOver,
+    #[msg("The prize pool can only roll over into a later challenge on the same track")]
+    InvalidRolloverTarget,
+    #[msg("You are already in a challenge on another track at that time")]
+    OverlappingChallenge,
+    #[msg("The claim window for this challenge has closed")]
+    ClaimWindowClosed,
+    #[msg("Warnings can no longer be given for this challenge")]
+    WarningsClosed,
+    #[msg("Arithmetic overflow")]
+    MathOverflow,
+}

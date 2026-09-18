@@ -1,0 +1,17 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/staff",
+      "destination": "/"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "https://coldshell-production.up.railway.app/api/:path*"
+    },
+    {
+      "source": "/auth/:path*",
+      "destination": "https://coldshell-production.up.railway.app/auth/:path*"
+    }
+  ]
+}

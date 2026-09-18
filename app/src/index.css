@@ -1,0 +1,1453 @@
+:root {
+  /* Dark by default. The flame switches to light and remembers it. */
+  --bg: #0e1013;
+  /* The output area is darker than the window's own furniture, like a real terminal. */
+  --out-bg: #08090b;
+  --term-bg: #191c21;
+  --term-edge: #2b3037;
+  /* Ink. --cyan is the main text colour (the name is older than the palette). */
+  --cyan: #e7e9ed;
+  --hover: #aeb5c0;
+  --muted-text: #79818e;
+  --muted-border: #3a404a;
+  /* Results only: nothing decorative is ever red or green. */
+  --ok: #3fbf6a;
+  --error: #ff6b61;
+  /* The echoed command line, so each step is easy to tell apart. */
+  --command: #7a9cff;
+  /* Wallet and Discord keep their own colours. */
+  --wallet: #512da8;
+  --wallet-hover: #3b1f82;
+  color-scheme: dark;
+
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  color: var(--cyan);
+  background: var(--bg);
+}
+
+:root[data-theme='light'] {
+  --bg: #ffffff;
+  --out-bg: #ffffff;
+  --term-bg: #ebecee;
+  --term-edge: #d3d6dc;
+  --cyan: #16181d;
+  --hover: #4a515c;
+  --muted-text: #767f8d;
+  --muted-border: #c8ccd4;
+  --ok: #0f7a3d;
+  --error: #c0261f;
+  --command: #1430c4;
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 120ms ease, filter 120ms ease;
+}
+
+a:focus-visible,
+.wallet-adapter-button:focus-visible {
+  outline: 2px solid var(--hover);
+  outline-offset: 4px;
+}
+
+.page {
+  padding: clamp(16px, 3vw, 40px) clamp(16px, 4vw, 80px);
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+#root > .page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: safe center;
+}
+
+
+.wallet-adapter-button-trigger {
+  height: clamp(38px, 3.9vw, 54px);
+  padding: 0 clamp(16px, 2vw, 34px);
+  font-size: clamp(13px, 1.3vw, 19px);
+  background-color: var(--wallet);
+  transition: background-color 120ms ease;
+}
+
+.wallet-adapter-button:not([disabled]):hover {
+  background-color: var(--wallet-hover);
+}
+
+.discord-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.discord-button img {
+  width: clamp(48px, 6vw, 74px);
+  height: clamp(48px, 6vw, 74px);
+}
+
+.discord-avatar {
+  border-radius: 50%;
+}
+
+.discord-who {
+  margin: 0 0 2px;
+  max-width: 18ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.7;
+}
+
+.discord-button:hover {
+  color: var(--hover);
+  filter: brightness(1.15);
+}
+
+.discord-button:focus-visible {
+  outline: 2px solid var(--hover);
+  outline-offset: 4px;
+}
+
+/* Who is connected, and what to do about it. */
+.discord-menu {
+  position: relative;
+}
+
+.discord-dropdown {
+  position: absolute;
+  z-index: 2;
+  top: calc(100% + 8px);
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--cyan);
+  background: var(--bg);
+  color: var(--cyan);
+  white-space: nowrap;
+}
+
+.discord-dropdown a,
+.discord-dropdown button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  cursor: pointer;
+}
+
+.discord-dropdown a:hover,
+.discord-dropdown button:hover {
+  color: var(--hover);
+}
+
+/* Registration box (inside the Register toggle) */
+.pay-box {
+  width: min(440px, 100%);
+  box-sizing: border-box;
+  margin: 0.8em 0 0.4em;
+  padding: 20px 24px;
+  border: 2px solid var(--cyan);
+  font-size: clamp(14px, 1.4vw, 18px);
+}
+
+.pay-rows {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px 16px;
+  margin: 0 0 20px;
+}
+
+.pay-rows dt {
+  /* Dimmed with color, not opacity, so the multiply info that opens inside it stays solid. */
+  color: color-mix(in srgb, var(--cyan) 70%, transparent);
+}
+
+.pay-rows dd {
+  margin: 0;
+  text-align: right;
+}
+
+.pay-message {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 16px;
+  overflow-wrap: anywhere;
+}
+
+.pay-message p {
+  margin: 0;
+}
+
+.pay-error {
+  color: var(--error);
+  white-space: pre-wrap;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.pay-button {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid var(--cyan);
+  background: none;
+  color: var(--cyan);
+  font: inherit;
+  cursor: pointer;
+  transition: color 120ms ease, border-color 120ms ease;
+}
+
+a.pay-button {
+  display: block;
+  box-sizing: border-box;
+  text-align: center;
+  text-decoration: none;
+}
+
+.pay-button + .pay-button {
+  margin-top: 10px;
+}
+
+.pay-button:hover:not(:disabled) {
+  color: var(--hover);
+  border-color: var(--hover);
+}
+
+.pay-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pay-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  cursor: pointer;
+  transition: color 120ms ease;
+}
+
+.pay-link:hover:not(:disabled) {
+  color: var(--hover);
+}
+
+/* Still to do before paying: connecting a wallet or Discord. */
+.pay-link-todo {
+  color: var(--error);
+}
+
+.pay-discord {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pay-discord img {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+}
+
+.pay-discord .pay-link {
+  opacity: 0.7;
+}
+
+.pay-button:focus-visible,
+.pay-link:focus-visible,
+button.nav-link:focus-visible {
+  outline: 2px solid var(--hover);
+  outline-offset: 4px;
+}
+
+/* Both views of a card share one grid cell; the card is as tall as the taller view. */
+.card.card-stack {
+  display: grid;
+}
+
+.card-pane {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.card-pane[data-active='false'] {
+  visibility: hidden;
+}
+
+/* Claim button before it can be used, and after it was. */
+.pay-button[data-state='waiting'],
+.pay-button[data-state='done'] {
+  opacity: 1;
+  color: var(--muted-text);
+  border-color: var(--muted-border);
+}
+
+.status {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(100%, 940px);
+  margin-inline: auto;
+  min-width: 0;
+  font-size: clamp(13px, 1.1vw, 16px);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  align-items: stretch;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  border: 1px dotted var(--cyan);
+}
+
+.card-title {
+  margin: 0 0 16px;
+  font-size: 1.15em;
+  font-weight: 400;
+  text-align: center;
+}
+
+.card-countdown {
+  margin: 0 0 16px;
+  font-size: 2.2em;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.card-subject {
+  margin: 0 0 10px;
+}
+
+.card-rows {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 12px;
+  margin: 0;
+  padding-left: 1.4em;
+}
+
+.card-rows dt::before {
+  content: '- ';
+}
+
+.card-rows dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.card-empty {
+  margin: 0;
+  opacity: 0.6;
+}
+
+.card-actions {
+  margin-top: auto;
+  padding-top: 10px;
+}
+
+/* Next Challenge card in registration mode */
+.card-head {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: start;
+  margin-bottom: 16px;
+}
+
+.card-head .card-title {
+  grid-column: 2;
+  margin: 0;
+}
+
+.card-back {
+  grid-column: 1;
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: color 120ms ease;
+}
+
+.card-head-end {
+  grid-column: 3;
+  justify-self: end;
+  align-self: center;
+}
+
+.card-back:hover:not(:disabled) {
+  color: var(--hover);
+}
+
+.card-back:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.card-back:focus-visible {
+  outline: 2px solid var(--hover);
+  outline-offset: 4px;
+}
+
+/* Inside a card the payment form needs no frame of its own. */
+.card .pay-box {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: inherit;
+}
+
+.card .pay-actions {
+  margin-top: auto;
+  padding-top: 8px;
+}
+
+.card .pay-actions > .pay-message {
+  margin-bottom: 6px;
+}
+
+/* Inside a card the form rows sit as close as the card's own rows. */
+.card .pay-rows {
+  gap: 6px 12px;
+  margin-bottom: 12px;
+}
+
+
+
+.day-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+  font-size: 1.3em;
+}
+
+.day {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.1em;
+  height: 2.1em;
+  border: 1px solid var(--cyan);
+  opacity: 0.5;
+}
+
+/* Partly filled days show how far the camera time got. */
+.day[data-state='partial'] {
+  opacity: 0.85;
+  background: linear-gradient(to top, color-mix(in srgb, var(--cyan) 55%, transparent) var(--fill), transparent var(--fill));
+}
+
+.day[data-state='passed'] {
+  background: var(--cyan);
+  color: var(--bg);
+  opacity: 1;
+}
+
+.day[data-today] {
+  outline: 1px solid var(--hover);
+  outline-offset: 2px;
+}
+
+.card .card-rows { padding-left: 0; margin-bottom: 8px; }
+
+.card-note {
+  margin: 0 0 6px;
+  opacity: 0.7;
+}
+
+/* Multiply stepper + info */
+.pay-multiply-label {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pay-info {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.3em;
+  height: 1.3em;
+  padding: 0;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 0.8em;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 120ms ease;
+}
+
+.pay-info:hover,
+.pay-info[aria-expanded='true'] {
+  color: var(--hover);
+}
+
+.pay-multiply {
+  position: relative;
+  display: inline-block;
+}
+
+/* Drops down from the Multiply label across the full card width, over the rows below,
+   so opening it does not change the card size. (100cqi = the card's content width.) */
+.pay-info-text {
+  position: absolute;
+  z-index: 1;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 100cqi;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px dashed var(--cyan);
+  background: var(--bg);
+  color: var(--cyan);
+  font-size: 0.9em;
+  line-height: 1.45;
+  text-align: left;
+}
+
+.pay-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pay-stepper button {
+  width: 1.6em;
+  height: 1.6em;
+  padding: 0;
+  border: 1px solid var(--cyan);
+  background: none;
+  color: var(--cyan);
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 120ms ease, border-color 120ms ease;
+}
+
+.pay-stepper button:hover:not(:disabled) {
+  color: var(--hover);
+  border-color: var(--hover);
+}
+
+.pay-stepper button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.pay-stepper output {
+  min-width: 2.4em;
+  text-align: center;
+}
+
+.pay-info:focus-visible,
+.pay-stepper button:focus-visible {
+  outline: 2px solid var(--hover);
+  outline-offset: 2px;
+}
+
+/* Toggle sections (How to start, Rules) */
+.steps {
+  max-width: 34em;
+  margin: 0;
+  padding: 0.7em 0 0.4em;
+  list-style: none;
+  counter-reset: step;
+  font-size: 0.62em;
+  line-height: 1.5;
+}
+
+.steps li {
+  display: grid;
+  grid-template-columns: 2.2em 1fr;
+  margin-bottom: 0.9em;
+  counter-increment: step;
+}
+
+.steps li::before {
+  content: counter(step) '.';
+}
+
+.steps-plain li::before {
+  content: '-';
+}
+
+.steps strong {
+  display: block;
+  font-weight: 400;
+}
+
+/* Rules: a single line per item, so it reads at full strength. */
+.steps-lines li {
+  margin-bottom: 0.6em;
+}
+
+.steps-lines p {
+  margin: 0 !important;
+  opacity: 1 !important;
+}
+
+.steps-lines .steps-text {
+  opacity: 0.7;
+}
+
+.steps-footer {
+  margin: 0 0 0.6em;
+  font-size: 0.62em;
+}
+
+.steps-footer a,
+.pay-agree a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  transition: color 120ms ease;
+}
+
+.steps-footer a:hover,
+.pay-agree a:hover {
+  color: var(--hover);
+}
+
+/* Claim deadline right above Claim reward, like the rules agreement above Pay */
+.claim-deadline {
+  margin: 0 0 8px;
+  opacity: 0.7;
+}
+
+.claim-deadline[data-hidden='true'] {
+  visibility: hidden;
+}
+
+/* Rules agreement right above Pay */
+.pay-agree {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  cursor: pointer;
+}
+
+.pay-agree[data-hidden='true'] {
+  visibility: hidden;
+}
+
+.pay-agree input {
+  /* Square outline like the day squares; a solid inner square when checked. */
+  appearance: none;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 1.1em;
+  height: 1.1em;
+  margin: 0;
+  border: 1px solid var(--cyan);
+  background: none;
+  cursor: pointer;
+  transition: border-color 120ms ease;
+}
+
+.pay-agree input::before {
+  content: '';
+  width: 0.55em;
+  height: 0.55em;
+  background: var(--cyan);
+  transform: scale(0);
+  transition: transform 120ms ease;
+}
+
+.pay-agree input:checked::before {
+  transform: scale(1);
+}
+
+.pay-agree:hover input:not(:disabled) {
+  border-color: var(--hover);
+}
+
+.pay-agree input:focus-visible {
+  outline: 2px solid var(--hover);
+  outline-offset: 2px;
+}
+
+.steps p {
+  margin: 0.15em 0 0;
+  opacity: 0.7;
+}
+
+/* "- date" row: start ~ end on one line, with a local/UTC switch */
+.card-rows dd.card-dates {
+  white-space: nowrap;
+}
+
+/* Narrow cards shrink the dates a little instead of wrapping them. */
+.card {
+  container-type: inline-size;
+}
+
+@container (max-width: 275px) {
+  .card-rows dd.card-dates { font-size: 0.85em; }
+}
+
+@container (max-width: 250px) {
+  .card-rows dd.card-dates { font-size: 0.78em; }
+}
+
+.contact-list a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  transition: color 120ms ease;
+}
+
+.contact-list a:hover {
+  color: var(--hover);
+}
+
+.zone-toggle {
+  padding: 0 0.3em;
+  border: 1px solid currentColor;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 0.8em;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: color 120ms ease, opacity 120ms ease;
+}
+
+.zone-toggle:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.zone-toggle:hover:not(:disabled) {
+  color: var(--hover);
+  opacity: 1;
+}
+
+.zone-toggle:focus-visible {
+  outline: 2px solid var(--hover);
+  outline-offset: 2px;
+}
+
+.card-center {
+  text-align: center;
+  text-wrap: balance;
+}
+
+/* A pane that must not grow the card: it takes the height the other pane sets and scrolls. */
+.card-pane-fill {
+  height: 0;
+  min-height: 100%;
+}
+
+.records {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.record {
+  padding: 10px 0;
+  border-bottom: 1px dotted color-mix(in srgb, var(--cyan) 40%, transparent);
+}
+
+.record:first-child {
+  padding-top: 0;
+}
+
+.record p {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+}
+
+.record-meta {
+  margin-top: 4px !important;
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+}
+
+.record-claim {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.record-claim span {
+  opacity: 0.7;
+}
+
+.record[data-result='out'] .record-title span:last-child,
+.record[data-result='expired'] .record-title span:last-child,
+.record[data-result='missed'] .record-title span:last-child {
+  opacity: 0.6;
+}
+
+.record[data-result='won'] .record-title span:last-child {
+  color: var(--hover);
+}
+
+/* Staff page: a wide, plain read-out for running the challenges. */
+.staff {
+  max-width: 1100px;
+  margin: 0 auto;
+  font-size: clamp(13px, 1.1vw, 16px);
+}
+
+.staff-title {
+  margin: 0;
+  font-size: 1.4em;
+  font-weight: 400;
+}
+
+.staff-block {
+  margin-top: 28px;
+  padding-top: 16px;
+  border-top: 1px dotted color-mix(in srgb, var(--cyan) 40%, transparent);
+}
+
+.staff-heading {
+  margin: 0 0 10px;
+  font-size: 1.1em;
+  font-weight: 400;
+}
+
+.staff .card-rows {
+  padding-left: 0;
+  margin-bottom: 14px;
+  max-width: 640px;
+}
+
+.staff-scroll {
+  overflow-x: auto;
+}
+
+.staff-table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 720px;
+}
+
+.staff-table th,
+.staff-table td {
+  padding: 8px 12px 8px 0;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px dotted color-mix(in srgb, var(--cyan) 25%, transparent);
+}
+
+.staff-table th {
+  opacity: 0.7;
+  font-weight: 400;
+}
+
+.staff-credit {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.staff-note {
+  opacity: 0.7;
+}
+
+.staff-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.staff-form label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.staff-form span {
+  opacity: 0.7;
+}
+
+.staff-form input {
+  padding: 6px 8px;
+  border: 1px solid var(--cyan);
+  background: none;
+  color: inherit;
+  font: inherit;
+}
+
+.staff-form input:focus-visible {
+  outline: 2px solid var(--hover);
+  outline-offset: 2px;
+}
+
+.staff-form .staff-send {
+  width: auto;
+  padding: 8px 18px;
+}
+
+.staff-form .staff-note {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+/* The flame, then the pitch: one line of the page, centred as a group. */
+.tagline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(12px, 1.8vw, 26px);
+  margin: 0 auto clamp(18px, 2.4vw, 32px);
+  max-width: 76ch;
+  text-align: left;
+}
+
+.tagline-flame {
+  position: relative;
+  display: block;
+  width: min(clamp(54px, 6.4vw, 96px), 13vh);
+  height: min(clamp(54px, 6.4vw, 96px), 13vh);
+  padding: 0;
+  border: 0;
+  background: none;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.tagline-flame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* The tint is the same artwork used as a mask, so the silhouette stays exact. */
+.tagline-flame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 250ms ease;
+  -webkit-mask: var(--flame) center / contain no-repeat;
+  mask: var(--flame) center / contain no-repeat;
+}
+
+.tagline-flame[data-tint]::after {
+  opacity: 1;
+}
+
+.tagline-flame[data-tint='close']::after {
+  background: #ff5f57;
+}
+
+.tagline-flame[data-tint='min']::after {
+  background: #febc2e;
+}
+
+.tagline-flame[data-tint='max']::after {
+  background: #28c840;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tagline-flame::after {
+    transition: none;
+  }
+}
+
+.tagline-pitch {
+  margin: 0;
+  font-family: 'Instrument Serif', 'Playfair Display', Georgia, serif;
+  font-size: clamp(22px, 2.8vw, 40px);
+  font-weight: 400;
+  line-height: 1.15;
+}
+
+.tagline-how {
+  margin: 6px 0 0;
+  color: var(--muted-text);
+  font-size: clamp(11px, 1.1vw, 15px);
+  line-height: 1.5;
+}
+
+/* ── The window ───────────────────────────────────────────────────────────────
+   80 characters wide and 18 lines tall, so the frame never changes size whatever
+   the tab prints. The type size shrinks on small screens; the grid does not. */
+.terminal-wrap {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  width: max-content;
+  max-width: 100%;
+  margin-inline: auto;
+  font-size: clamp(10px, min(0.92vw, calc((100vh - 423px) / 27)), 13px);
+}
+
+.terminal {
+  --rows: 18;
+  --pad: 1.1em;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  border: 1px solid var(--term-edge);
+  border-radius: 6px;
+  background: var(--term-bg);
+  font-size: 1em;
+  line-height: 1.5;
+  overflow: hidden;
+}
+
+/* Maximised: the same window, filling the screen. */
+.terminal[data-state='maximised'] {
+  position: fixed;
+  inset: 12px;
+  z-index: 50;
+  width: auto;
+  max-width: none;
+}
+
+.terminal[data-state='maximised'] .term-out {
+  height: auto;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: auto;
+}
+
+/* Closed: the session ended, and can be started again. */
+.terminal-closed {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1.2em;
+  padding: 0.8em 1.2em;
+  font-size: clamp(11px, 1.1vw, 15px);
+}
+
+/* Title bar: lights, name in the middle, account on the right. */
+.term-bar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 1em;
+  padding: 0.5em var(--pad);
+  border-bottom: 1px solid var(--term-edge);
+}
+
+.term-lights {
+  display: flex;
+  align-items: center;
+  gap: 0.55em;
+}
+
+.term-light {
+  width: 1.1em;
+  height: 1.1em;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: filter 120ms ease;
+}
+
+.term-light:hover {
+  filter: brightness(0.85);
+}
+
+.term-light[data-light='close'] {
+  background: #ff5f57;
+}
+
+.term-light[data-light='min'] {
+  background: #febc2e;
+}
+
+.term-light[data-light='max'] {
+  background: #28c840;
+}
+
+.term-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--hover);
+}
+
+.term-account {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.8em;
+}
+
+.term-account .wallet-adapter-button-trigger {
+  height: 2em;
+  padding: 0 0.9em;
+  font-size: 1em;
+  font-family: inherit;
+  border-radius: 4px;
+}
+
+.term-account .discord-button img {
+  width: 1.9em;
+  height: 1.9em;
+}
+
+/* Tabs: the one control everybody already knows. */
+.term-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--term-edge);
+}
+
+.term-tab {
+  flex: 1 1 0;
+  min-width: 0;
+  text-align: center;
+  padding: 0.5em 1ch;
+  border: 0;
+  border-right: 1px solid var(--term-edge);
+  background: color-mix(in srgb, var(--term-edge) 50%, transparent);
+  color: var(--muted-text);
+  font: inherit;
+  line-height: 1.5;
+  cursor: pointer;
+  transition: color 120ms ease, background-color 120ms ease;
+}
+
+.term-tab:last-child {
+  border-right: 0;
+}
+
+.term-tab:hover {
+  color: var(--cyan);
+}
+
+.term-tab[aria-selected='true'] {
+  color: var(--cyan);
+  background: var(--out-bg);
+  font-weight: 500;
+}
+
+/* 80 columns by 24 rows, and it scrolls inside like a terminal does. */
+.term-out {
+  box-sizing: content-box;
+  width: 80ch;
+  max-width: 100%;
+  height: calc(var(--rows) * 1.5em);
+  overflow-y: auto;
+  padding: 0.75em var(--pad);
+  background: var(--out-bg);
+  font-family: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+}
+
+.term-block + .term-block,
+.term-block + .term-line,
+.term-entry {
+  margin-top: 1.5em;
+}
+
+.term-prompt {
+  margin: 0 0 0.3em;
+  color: var(--command);
+  font-weight: 500;
+}
+
+.term-prompt::before {
+  content: '$ ';
+}
+
+.term-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 1.5ch;
+  margin: 0 0 0.3em;
+  font-weight: 500;
+}
+
+.term-tag {
+  color: var(--muted-text);
+  font-weight: 400;
+}
+
+.term-line {
+  margin: 0;
+}
+
+.term-dim {
+  color: var(--muted-text);
+}
+
+.term-bad {
+  color: var(--error);
+}
+
+.term-ask {
+  margin-top: 1.5em;
+}
+
+.term-ask a {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+/* Key/value output: labels in one column, values in the next. */
+.term-rows {
+  display: grid;
+  grid-template-columns: 14ch minmax(0, 1fr);
+  gap: 0 1ch;
+  margin: 0;
+}
+
+.term-rows dt {
+  color: var(--muted-text);
+}
+
+.term-rows dd {
+  margin: 0;
+}
+
+/* The result at the end of a line, the way a check prints it. */
+.term-state {
+  margin-left: 2ch;
+}
+
+.term-state[data-state='ok'],
+.term-state[data-state='won'],
+.term-state[data-state='claimed'] {
+  color: var(--ok);
+}
+
+.term-state[data-state='needed'],
+.term-state[data-state='short'],
+.term-state[data-state='missed'],
+.term-state[data-state='out'],
+.term-state[data-state='expired'] {
+  color: var(--error);
+}
+
+.term-state[data-state='running'],
+.term-state[data-state='settling'],
+.term-state[data-state='upcoming'] {
+  color: var(--muted-text);
+}
+
+/* Day meters and record rows: columns that line up down the page. */
+.term-days,
+.term-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.term-days li,
+.term-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 0 2ch;
+  white-space: nowrap;
+}
+
+.term-days .term-col:first-child,
+.term-list .term-col:first-child {
+  width: 6ch;
+  color: var(--muted-text);
+}
+
+.term-meter {
+  letter-spacing: -0.05em;
+}
+
+/* How to start, and the rules. */
+.term-steps,
+.term-rules {
+  margin: 0;
+  padding-left: 3ch;
+}
+
+.term-steps li,
+.term-rules li {
+  margin-bottom: 0.75em;
+}
+
+.term-steps li::marker,
+.term-rules li::marker {
+  color: var(--muted-text);
+}
+
+.term-step-title,
+.term-step-body {
+  margin: 0;
+}
+
+.term-step-body,
+.term-rules li {
+  color: var(--hover);
+}
+
+.term-topic,
+.term-step-title {
+  color: var(--cyan);
+  font-weight: 500;
+}
+
+/* ── Commands ─────────────────────────────────────────────────────────────── */
+.chip-bar {
+  display: flex;
+  gap: 0.6em;
+  align-items: center;
+  min-height: 3.2em;
+  padding: 0.5em var(--pad);
+  border-top: 1px solid var(--term-edge);
+}
+
+.chip-commands {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  gap: 0.6em;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+/* Back and reset are always there, whatever the tab is doing. */
+.chip-fixed {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  padding: 0.45em 0.7em;
+  line-height: 1;
+  font-size: 1.05em;
+}
+
+.chip {
+  padding: 0.35em 1.2em;
+  border: 1px solid var(--muted-border);
+  border-radius: 999px;
+  background: var(--out-bg);
+  color: var(--cyan);
+  font: inherit;
+  line-height: 1.5;
+  cursor: pointer;
+  transition: border-color 120ms ease, color 120ms ease;
+}
+
+.chip:hover:not(:disabled) {
+  border-color: var(--cyan);
+}
+
+.chip:disabled {
+  color: var(--muted-text);
+  cursor: default;
+}
+
+/* An answer to a question the terminal just asked. */
+.chip[data-tone='yes'] {
+  border-color: var(--ok);
+  color: var(--ok);
+}
+
+.chip[data-tone='yes']:disabled {
+  border-color: var(--muted-border);
+  color: var(--muted-text);
+}
+
+.chip[data-tone='no'] {
+  color: var(--muted-text);
+}
+
+/* ── Footer ───────────────────────────────────────────────────────────────── */
+.contact {
+  margin: clamp(14px, 2vw, 24px) auto 0;
+  color: var(--muted-text);
+  font-size: clamp(10px, 1vw, 13px);
+  text-align: center;
+}
+
+.contact a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+}
+
+.contact a:hover {
+  color: var(--cyan);
+}
+
+.ico {
+  flex-shrink: 0;
+}
+
+.ico-mask {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  background: currentColor;
+  -webkit-mask: var(--icon) center / contain no-repeat;
+  mask: var(--icon) center / contain no-repeat;
+}
+
+.contact span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+}
