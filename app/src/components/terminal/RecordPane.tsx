@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { QUESTIONS, questionOfTheDay } from '../../questions'
 import { ClipRecorder, CONSTRAINTS, MAX_MS, MIN_MS, clock, mb, pickMimeType, type Recording } from '../../lib/recorder'
+import { shellNow } from '../../lib/shell'
 import { useCommands, useScrollOutput } from './chips'
 
 type Stage =
@@ -35,6 +36,7 @@ export function RecordPane({ active }: { active: boolean }) {
   const recorderRef = useRef<ClipRecorder | null>(null)
 
   const mimeType = pickMimeType()
+  const shell = shellNow()
 
   const release = useCallback(() => {
     streamRef.current?.getTracks().forEach((track) => track.stop())
@@ -140,12 +142,16 @@ export function RecordPane({ active }: { active: boolean }) {
 
   return (
     <>
-      <p className="term-prompt">record</p>
+      <p className="term-prompt">record --shell {shell.shell}</p>
 
       {!mimeType ? (
         <p className="term-line term-bad">this browser cannot record. use chrome.</p>
       ) : (
         <dl className="term-rows">
+          <dt>date</dt>
+          <dd>
+            {shell.date} {shell.weekday} ({shell.day}/{shell.days})
+          </dd>
           <dt>format</dt>
           <dd>{mimeType}</dd>
           <dt>camera</dt>
@@ -162,8 +168,6 @@ export function RecordPane({ active }: { active: boolean }) {
               </span>
             )}
           </dd>
-          <dt>minimum</dt>
-          <dd>{clock(MIN_MS)}</dd>
         </dl>
       )}
 
