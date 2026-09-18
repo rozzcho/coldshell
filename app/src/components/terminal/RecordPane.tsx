@@ -13,6 +13,9 @@ type Stage =
   | { kind: 'done'; clip: Recording }
   | { kind: 'error'; message: string }
 
+/** Each command's output, kept in the order it was run. */
+type Entry = { id: number; command: 'camera' } | { id: number; command: 'example'; question: number }
+
 function reason(err: unknown) {
   const name = err instanceof Error ? err.name : ''
   if (name === 'NotAllowedError') return 'camera access was refused. allow it and run camera again.'
@@ -21,24 +24,46 @@ function reason(err: unknown) {
   return err instanceof Error ? err.message : String(err)
 }
 
+/** One block per day, filled once that day is sealed. */
+function Days({ sealed, total }: { sealed: number; total: number }) {
+  return (
+    <>
+      <dt>days</dt>
+      <dd>
+        <span className="term-meter">
+          {'█'.repeat(sealed)}
+          {'░'.repeat(Math.max(0, total - sealed))}
+        </span>
+        <span>
+          {' '}
+          {sealed}/{total}
+        </span>
+      </dd>
+    </>
+  )
+}
+
 /**
  * Today's minute. The clip never leaves the browser until it is sealed, and the length is timed
- * here rather than read back from the file — a WebM from MediaRecorder does not carry its own.
+ * while recording rather than read back from the file — a WebM from MediaRecorder does not carry
+ * its own.
  */
 export function RecordPane({ active }: { active: boolean }) {
   const { publicKey } = useWallet()
   const [stage, setStage] = useState<Stage>({ kind: 'idle' })
   const [elapsed, setElapsed] = useState(0)
-  // Questions asked so far, oldest first. The first is today's, the same one everybody gets.
-  const [asked, setAsked] = useState<number[]>([])
+  const [log, setLog] = useState<Entry[]>([])
+  const nextId = useRef(0)
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const recorderRef = useRef<ClipRecorder | null>(null)
 
   const mimeType = pickMimeType()
   const now = today()
-  // No enrolment yet, so this is the week's own count; once there is one it becomes day 8 of 14.
+  // Nothing is enrolled yet, so this is the week's own count; with an enrolment it becomes 8 of 14.
   const run = progress()
+  // Sealing is not built, so nobody has sealed a day. This becomes a read of the chain.
+  const sealed = 0
 
   const release = useCallback(() => {
     streamRef.current?.getTracks().forEach((track) => track.stop())
@@ -47,20 +72,35 @@ export function RecordPane({ active }: { active: boolean }) {
 
   useEffect(() => release, [release])
 
+  // The preview element only exists once the camera command has printed its output.
+  useEffect(() => {
+    if (videoRef.current && streamRef.current && !videoRef.current.srcObject) {
+      videoRef.current.srcObject = streamRef.current
+      videoRef.current.play().catch(() => {})
+    }
+  })
+
   const openCamera = async () => {
+    setLog((entries) => [...entries, { id: nextId.current++, command: 'camera' }])
     setStage({ kind: 'asking' })
     try {
-      const stream = await navigator.mediaDevices.getUserMedia(CONSTRAINTS)
-      streamRef.current = stream
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-        await videoRef.current.play().catch(() => {})
-      }
+      streamRef.current = await navigator.mediaDevices.getUserMedia(CONSTRAINTS)
       setStage({ kind: 'ready' })
     } catch (err) {
       setStage({ kind: 'error', message: reason(err) })
     }
   }
+
+  const askAnother = () =>
+    setLog((entries) => [
+      ...entries,
+      {
+        id: nextId.current++,
+        command: 'example',
+        question:
+          (questionOfTheDay() + entries.filter((e) => e.command === 'example').length) % QUESTIONS.length,
+      },
+    ])
 
   const start = () => {
     if (!streamRef.current || !mimeType) return
@@ -94,15 +134,23 @@ export function RecordPane({ active }: { active: boolean }) {
   }, [stage.kind])
 
   const longEnough = elapsed >= MIN_MS
-  const open = stage.kind === 'ready' || stage.kind === 'recording' || stage.kind === 'done'
+  const cameraRun = log.some((entry) => entry.command === 'camera')
 
-  const askAnother = () =>
-    setAsked((list) => [...list, (questionOfTheDay() + list.length) % QUESTIONS.length])
+  // Back takes one command off the scrollback; dropping the camera closes it.
+  const back = () => {
+    const last = log[log.length - 1]
+    if (!last) return
+    if (last.command === 'camera') {
+      release()
+      setStage({ kind: 'idle' })
+    }
+    setLog((entries) => entries.slice(0, -1))
+  }
 
   useCommands(
     {
       chips: [
-        ...(stage.kind === 'idle' || stage.kind === 'error'
+        ...(!cameraRun || stage.kind === 'error'
           ? [{ key: 'camera', label: 'camera', onClick: openCamera, disabled: !mimeType }]
           : stage.kind === 'asking'
             ? [{ key: 'wait', label: 'waiting…', disabled: true }]
@@ -117,79 +165,77 @@ export function RecordPane({ active }: { active: boolean }) {
                       disabled: !longEnough,
                     },
                   ]
-                  : [
-                      { key: 'again', label: 'record again', onClick: start },
-                      {
-                        key: 'seal',
-                        label: 'seal',
-                        tone: 'yes' as const,
-                        // Sealing writes to the chain, so it needs a wallet before anything else.
-                        disabled: true,
-                      },
-                    ]),
+                : [
+                    { key: 'again', label: 'record again', onClick: start },
+                    // Sealing writes to the chain, so it needs a wallet before anything else.
+                    { key: 'seal', label: 'seal', tone: 'yes' as const, disabled: true },
+                  ]),
         { key: 'example', label: 'example', onClick: askAnother },
       ],
-      back:
-        asked.length > 0
-          ? () => setAsked((list) => list.slice(0, -1))
-          : stage.kind === 'done'
-            ? () => setStage({ kind: 'ready' })
-            : undefined,
+      back: log.length > 0 ? back : undefined,
     },
-    [stage.kind, longEnough, elapsed, mimeType, asked.length, publicKey],
+    [stage.kind, longEnough, elapsed, mimeType, log.length, cameraRun],
     active,
   )
 
-  useScrollOutput([stage.kind, asked.length])
+  useScrollOutput([stage.kind, log.length])
 
   return (
     <>
       <p className="term-prompt">record --shell {now.shell}</p>
+      <dl className="term-rows">
+        <dt>date</dt>
+        <dd>
+          {now.date} {now.weekday}
+        </dd>
+        {publicKey && <Days sealed={sealed} total={run.days} />}
+      </dl>
 
-      {!mimeType ? (
-        <p className="term-line term-bad">this browser cannot record. use chrome.</p>
-      ) : (
-        <dl className="term-rows">
-          <dt>date</dt>
-          <dd>
-            {now.date} {now.weekday} ({run.day}/{run.days})
-          </dd>
-          <dt>format</dt>
-          <dd>{mimeType}</dd>
-          <dt>camera</dt>
-          <dd>
-            {stage.kind === 'idle' ? (
-              <span className="term-dim">not open</span>
-            ) : stage.kind === 'asking' ? (
-              'asking…'
-            ) : stage.kind === 'error' ? (
-              <span className="term-bad">{stage.message}</span>
+      {log.map((entry) =>
+        entry.command === 'example' ? (
+          <div className="term-entry" key={entry.id}>
+            <p className="term-prompt">example</p>
+            <p className="term-line">{QUESTIONS[entry.question]}</p>
+          </div>
+        ) : (
+          <div className="term-entry" key={entry.id}>
+            <p className="term-prompt">camera</p>
+            {!mimeType ? (
+              <p className="term-line term-bad">this browser cannot record. use chrome.</p>
             ) : (
-              <span className="term-state" data-state="ok">
-                ok
-              </span>
+              <>
+                <dl className="term-rows">
+                  <dt>format</dt>
+                  <dd>{mimeType}</dd>
+                  <dt>status</dt>
+                  <dd>
+                    {stage.kind === 'asking' ? (
+                      'asking…'
+                    ) : stage.kind === 'error' ? (
+                      <span className="term-bad">{stage.message}</span>
+                    ) : (
+                      <span className="term-state" data-state="ok">
+                        ok
+                      </span>
+                    )}
+                  </dd>
+                </dl>
+                {stage.kind !== 'error' && (
+                  <div className="record-stage">
+                    <video ref={videoRef} muted playsInline className="record-preview" />
+                    {stage.kind === 'recording' && (
+                      <p className="record-clock">
+                        <span className="record-dot" aria-hidden="true" />
+                        {clock(elapsed)}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </>
             )}
-          </dd>
-        </dl>
+          </div>
+        ),
       )}
-
-      {/* No black rectangle before there is anything to see in it. */}
-      <div className="record-stage" hidden={!open}>
-        <video ref={videoRef} muted playsInline className="record-preview" />
-        {stage.kind === 'recording' && (
-          <p className="record-clock">
-            <span className="record-dot" aria-hidden="true" />
-            {clock(elapsed)}
-          </p>
-        )}
-      </div>
-
-      {asked.map((index, i) => (
-        <div className="term-entry" key={`${index}-${i}`}>
-          <p className="term-prompt">example</p>
-          <p className="term-line">{QUESTIONS[index]}</p>
-        </div>
-      ))}
 
       {stage.kind === 'done' && (
         <div className="term-block">
