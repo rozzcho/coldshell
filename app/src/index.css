@@ -15,6 +15,8 @@
   --error: #ff6b61;
   /* The echoed command line, so each step is easy to tell apart. */
   --command: #7a9cff;
+  /* The wordmark's blue. It does not change with the theme. */
+  --brand: #0024c0;
   /* Wallet and Discord keep their own colours. */
   --wallet: #512da8;
   --wallet-hover: #3b1f82;
@@ -951,74 +953,54 @@ button.nav-link:focus-visible {
   margin: 0;
 }
 
-/* The flame, then the pitch: one line of the page, centred as a group. */
+/* The wordmark, the slogan, the one line that explains it. Centred as a block. */
 .tagline {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(12px, 1.8vw, 26px);
   margin: 0 auto clamp(18px, 2.4vw, 32px);
-  max-width: 76ch;
-  text-align: left;
+  max-width: 62ch;
+  text-align: center;
 }
 
-.tagline-flame {
-  position: relative;
+/* The logo is the name itself: the serif, in blue, in both themes. */
+.wordmark {
   display: block;
-  width: min(clamp(54px, 6.4vw, 96px), 13vh);
-  height: min(clamp(54px, 6.4vw, 96px), 13vh);
+  margin: 0 auto;
   padding: 0;
   border: 0;
   background: none;
-  flex-shrink: 0;
+  font-family: 'Instrument Serif', 'Playfair Display', Georgia, serif;
+  font-size: clamp(34px, 5vw, 72px);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  color: var(--brand);
   cursor: pointer;
+  transition: color 250ms ease;
 }
 
-.tagline-flame img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+/* The three dots lend the wordmark their colour for a moment. */
+.wordmark[data-tint='close'] {
+  color: #ff5f57;
 }
 
-/* The tint is the same artwork used as a mask, so the silhouette stays exact. */
-.tagline-flame::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  transition: opacity 250ms ease;
-  -webkit-mask: var(--flame) center / contain no-repeat;
-  mask: var(--flame) center / contain no-repeat;
+.wordmark[data-tint='min'] {
+  color: #febc2e;
 }
 
-.tagline-flame[data-tint]::after {
-  opacity: 1;
-}
-
-.tagline-flame[data-tint='close']::after {
-  background: #ff5f57;
-}
-
-.tagline-flame[data-tint='min']::after {
-  background: #febc2e;
-}
-
-.tagline-flame[data-tint='max']::after {
-  background: #28c840;
+.wordmark[data-tint='max'] {
+  color: #28c840;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tagline-flame::after {
+  .wordmark {
     transition: none;
   }
 }
 
 .tagline-pitch {
-  margin: 0;
-  font-family: 'Instrument Serif', 'Playfair Display', Georgia, serif;
-  font-size: clamp(22px, 2.8vw, 40px);
-  font-weight: 400;
-  line-height: 1.15;
+  margin: 0.2em 0 0;
+  font-size: clamp(13px, 1.3vw, 18px);
+  letter-spacing: 0.08em;
+  text-transform: lowercase;
 }
 
 .tagline-how {
@@ -1453,6 +1435,10 @@ button.nav-link:focus-visible {
 }
 
 /* ── Recording ────────────────────────────────────────────────────────────── */
+.record-stage[hidden] {
+  display: none;
+}
+
 .record-stage {
   position: relative;
   margin-top: 1em;

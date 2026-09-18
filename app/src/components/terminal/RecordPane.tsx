@@ -85,6 +85,7 @@ export function RecordPane({ active }: { active: boolean }) {
   }, [stage.kind])
 
   const longEnough = elapsed >= MIN_MS
+  const open = stage.kind === 'ready' || stage.kind === 'recording' || stage.kind === 'done'
 
   useCommands(
     {
@@ -145,7 +146,8 @@ export function RecordPane({ active }: { active: boolean }) {
         </dl>
       )}
 
-      <div className="record-stage" data-live={stage.kind === 'recording' || undefined}>
+      {/* No black rectangle before there is anything to see in it. */}
+      <div className="record-stage" hidden={!open}>
         <video ref={videoRef} muted playsInline className="record-preview" />
         {stage.kind === 'recording' && (
           <p className="record-clock">

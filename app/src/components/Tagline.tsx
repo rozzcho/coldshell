@@ -1,9 +1,8 @@
-import flame from '../assets/flame-light.png'
 import { useTheme } from '../lib/theme'
 
 /**
- * The flame, then the pitch. Clicking the flame switches the page between dark and light; the
- * window's three dots set it alight in their own colour for a moment.
+ * The wordmark is the logo: the name set in the serif, in blue. Clicking it switches the page
+ * between dark and light; the window's three dots set it alight in their own colour for a moment.
  */
 export function Tagline({ tint }: { tint: string | null }) {
   const [theme, toggleTheme] = useTheme()
@@ -11,22 +10,19 @@ export function Tagline({ tint }: { tint: string | null }) {
     <div className="tagline">
       <button
         type="button"
-        className="tagline-flame"
+        className="wordmark"
         data-tint={tint ?? undefined}
-        style={{ '--flame': `url(${flame})` } as React.CSSProperties}
         title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
         aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
         onClick={toggleTheme}
       >
-        <img src={flame} alt="" />
+        coldshell
       </button>
-      <div>
-        <p className="tagline-pitch">Lose it or earn it &mdash; it&rsquo;s all on you.</p>
-        <p className="tagline-how">
-          Stake USDC, study 3 hours a day for 7 days on camera, and split the stakes of everyone who
-          didn&rsquo;t finish.
-        </p>
-      </div>
+      <p className="tagline-pitch">you vs you</p>
+      <p className="tagline-how">
+        Stake what would hurt to lose. Record a minute of yourself every day. Nobody watches it.
+        Finish the week and every cent comes back, along with the film.
+      </p>
     </div>
   )
 }

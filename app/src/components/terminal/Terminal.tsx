@@ -2,8 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
 import { NETWORK_LABEL } from '../../config'
-import { getMe } from '../../lib/api'
-import { DiscordButton } from '../DiscordButton'
 import { ChipBar, ChipProvider, type Commands } from './chips'
 import { CommunityPane } from './CommunityPane'
 import { MinePane } from './MinePane'
@@ -22,28 +20,12 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'rules', label: 'rules' },
 ]
 
-/** True when a Discord account is signed in here. */
-function useDiscord() {
-  const [discord, setDiscord] = useState(false)
-  useEffect(() => {
-    const check = () =>
-      getMe()
-        .then((me) => setDiscord(Boolean(me.discord)))
-        .catch(() => setDiscord(false))
-    check()
-    window.addEventListener('focus', check)
-    return () => window.removeEventListener('focus', check)
-  }, [])
-  return discord
-}
-
 /**
  * The whole product in one window: a fixed frame, tabs for the views, output inside, and the
  * commands underneath. Nothing here ever changes the page's size.
  */
 export function Terminal({ onTint }: { onTint: (colour: string) => void }) {
   const { publicKey } = useWallet()
-  const discord = useDiscord()
   const [tab, setTab] = useState<TabKey>('record')
   const [commands, setCommands] = useState<Commands>({ chips: [] })
   // One counter per tab: resetting remounts that pane only, so you stay where you are.
@@ -72,7 +54,7 @@ export function Terminal({ onTint }: { onTint: (colour: string) => void }) {
     setTab((current) => (publicKey ? (current === 'next' ? 'mine' : current) : current === 'mine' ? 'next' : current))
   }, [publicKey])
 
-  const joined = Boolean(publicKey) && discord
+  const joined = Boolean(publicKey)
   useEffect(() => {
     if (!joined) setTab((current) => (current === 'community' ? 'next' : current))
   }, [joined])
@@ -102,7 +84,6 @@ export function Terminal({ onTint }: { onTint: (colour: string) => void }) {
             <span className="term-name">coldshell@{NETWORK_LABEL.toLowerCase()}: ~</span>
             <span className="term-account">
               <WalletMultiButton />
-              <DiscordButton />
             </span>
           </div>
           <div className="term-tabs" role="tablist">
