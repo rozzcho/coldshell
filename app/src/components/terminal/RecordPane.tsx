@@ -3,7 +3,7 @@ import { useWallet } from '@solana/wallet-adapter-react'
 import { QUESTIONS, questionOfTheDay } from '../../questions'
 import { ClipRecorder, CONSTRAINTS, MAX_MS, MIN_MS, clock, mb, pickMimeType, type Recording } from '../../lib/recorder'
 import { seal, type Sealed } from '../../lib/seal'
-import { progress, today } from '../../lib/shell'
+import { TEST_MODE, progress, today, untilNextDay } from '../../lib/shell'
 import { useCommands, useScrollOutput } from './chips'
 import { bar } from './format'
 
@@ -65,7 +65,15 @@ export function RecordPane({ active, onRegister }: { active: boolean; onRegister
   const recorderRef = useRef<ClipRecorder | null>(null)
 
   const mimeType = pickMimeType()
+  // A shortened day moves while you are looking at it, so the clock has to keep up.
+  const [tick, setTick] = useState(0)
+  useEffect(() => {
+    if (!TEST_MODE) return
+    const timer = setInterval(() => setTick((n) => n + 1), 1000)
+    return () => clearInterval(timer)
+  }, [])
   const now = today()
+  void tick
   // Nothing is enrolled yet, so this is the week's own count; with an enrolment it becomes 8 of 14.
   const run = progress()
   // Sealing is not built, so nobody has sealed a day. This becomes a read of the chain.
@@ -227,6 +235,9 @@ export function RecordPane({ active, onRegister }: { active: boolean; onRegister
         <dt>date</dt>
         <dd>
           {now.date} {now.weekday}
+          {TEST_MODE && (
+            <span className="term-dim"> · next day in {clock(untilNextDay())}</span>
+          )}
         </dd>
         {publicKey && <Days sealed={sealed} total={run.days} />}
       </dl>
