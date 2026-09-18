@@ -4,20 +4,15 @@ import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
 import { NETWORK_LABEL } from '../../config'
 import { ChipBar, ChipProvider, type Commands } from './chips'
 import { CommunityPane } from './CommunityPane'
-import { MinePane } from './MinePane'
 import { RecordPane } from './RecordPane'
-import { NextPane } from './NextPane'
-import { RulesPane, StartPane } from './DocsPane'
+import { RegisterPane } from './RegisterPane'
 
-type TabKey = 'record' | 'mine' | 'next' | 'community' | 'start' | 'rules'
+type TabKey = 'record' | 'next' | 'community'
 
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'record', label: 'record' },
-  { key: 'mine', label: 'my challenge' },
   { key: 'next', label: 'register' },
   { key: 'community', label: 'community' },
-  { key: 'start', label: 'how to start' },
-  { key: 'rules', label: 'rules' },
 ]
 
 /**
@@ -29,14 +24,7 @@ export function Terminal({ onTint }: { onTint: (colour: string) => void }) {
   const [tab, setTab] = useState<TabKey>('record')
   const [commands, setCommands] = useState<Commands>({ chips: [] })
   // One counter per tab: resetting remounts that pane only, so you stay where you are.
-  const [sessions, setSessions] = useState<Record<TabKey, number>>({
-    record: 0,
-    mine: 0,
-    next: 0,
-    community: 0,
-    start: 0,
-    rules: 0,
-  })
+  const [sessions, setSessions] = useState<Record<TabKey, number>>({ record: 0, next: 0, community: 0 })
   const outRef = useRef<HTMLDivElement>(null)
 
   const reset = () => {
@@ -49,19 +37,12 @@ export function Terminal({ onTint }: { onTint: (colour: string) => void }) {
     outRef.current?.scrollTo({ top: 0 })
   }, [tab])
 
-  // My challenge only exists once there is a wallet to read it from; that is also where to land.
-  useEffect(() => {
-    setTab((current) => (publicKey ? (current === 'next' ? 'mine' : current) : current === 'mine' ? 'next' : current))
-  }, [publicKey])
-
   const joined = Boolean(publicKey)
   useEffect(() => {
     if (!joined) setTab((current) => (current === 'community' ? 'next' : current))
   }, [joined])
 
-  const tabs = TABS.filter(
-    (t) => (t.key !== 'mine' || publicKey) && (t.key !== 'community' || joined),
-  )
+  const tabs = TABS.filter((t) => t.key !== 'community' || joined)
 
   return (
     <ChipProvider value={setCommands}>
@@ -110,25 +91,14 @@ export function Terminal({ onTint }: { onTint: (colour: string) => void }) {
                 onRegister={() => setTab('next')}
               />
             </div>
-            {publicKey && (
-              <div hidden={tab !== 'mine'}>
-                <MinePane key={sessions.mine} active={tab === 'mine'} />
-              </div>
-            )}
             <div hidden={tab !== 'next'}>
-              <NextPane key={sessions.next} active={tab === 'next'} />
+              <RegisterPane key={sessions.next} active={tab === 'next'} />
             </div>
             {joined && (
               <div hidden={tab !== 'community'}>
                 <CommunityPane key={sessions.community} active={tab === 'community'} />
               </div>
             )}
-            <div hidden={tab !== 'start'}>
-              <StartPane key={sessions.start} active={tab === 'start'} />
-            </div>
-            <div hidden={tab !== 'rules'}>
-              <RulesPane key={sessions.rules} active={tab === 'rules'} />
-            </div>
           </div>
           {/* The input line of the window: the output above it only ever prints. */}
           <ChipBar commands={commands} onReset={reset} />

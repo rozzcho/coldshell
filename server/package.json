@@ -6,15 +6,10 @@
     "dev": "node --env-file-if-exists=.env --watch src/index.ts",
     "start": "node --env-file-if-exists=.env src/index.ts",
     "typecheck": "tsc",
-    "test": "node --test \"test/**/*.test.ts\"",
-    "credit-day": "node --env-file-if-exists=.env scripts/credit-day.ts"
+    "test": "node --test \"test/**/*.test.ts\""
   },
   "dependencies": {
-    "@anchor-lang/core": "^1.2.0",
     "@hono/node-server": "^2.1.1",
-    "@solana/spl-token": "^0.4.15",
-    "@solana/web3.js": "^1.99.0",
-    "discord.js": "^14.27.0",
     "hono": "^4.13.7"
   },
   "devDependencies": {

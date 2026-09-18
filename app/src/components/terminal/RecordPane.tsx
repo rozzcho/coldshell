@@ -2,8 +2,10 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { QUESTIONS, questionOfTheDay } from '../../questions'
 import { ClipRecorder, CONSTRAINTS, MAX_MS, MIN_MS, clock, mb, pickMimeType, type Recording } from '../../lib/recorder'
+import { seal, type Sealed } from '../../lib/seal'
 import { progress, today } from '../../lib/shell'
 import { useCommands, useScrollOutput } from './chips'
+import { bar } from './format'
 
 type Stage =
   | { kind: 'idle' }
@@ -11,6 +13,8 @@ type Stage =
   | { kind: 'ready' }
   | { kind: 'recording' }
   | { kind: 'done'; clip: Recording }
+  | { kind: 'sealing'; clip: Recording; done: number }
+  | { kind: 'sealed'; clip: Recording; stored: Sealed }
   | { kind: 'error'; message: string }
 
 /** Each command's output, kept in the order it was run. */
@@ -68,6 +72,21 @@ export function RecordPane({ active, onRegister }: { active: boolean; onRegister
   const enrolled = false
   // Anyone may open the camera and record; only sealing needs a wallet and a place in a shell.
   const missing = !publicKey ? 'wallet' : !enrolled ? 'shell' : null
+
+  const sealClip = async (clip: Recording) => {
+    if (!publicKey) return
+    setStage({ kind: 'sealing', clip, done: 0 })
+    try {
+      const stored = await seal(
+        clip.blob,
+        { wallet: publicKey.toBase58(), shell: now.shell, day: run.day, sha256: clip.sha256 },
+        (fraction) => setStage({ kind: 'sealing', clip, done: fraction }),
+      )
+      setStage({ kind: 'sealed', clip, stored })
+    } catch (err) {
+      setStage({ kind: 'error', message: err instanceof Error ? err.message : String(err) })
+    }
+  }
 
   const release = useCallback(() => {
     streamRef.current?.getTracks().forEach((track) => track.stop())
@@ -169,17 +188,29 @@ export function RecordPane({ active, onRegister }: { active: boolean; onRegister
                       disabled: !longEnough,
                     },
                   ]
-                : [
-                    { key: 'again', label: 'record again', onClick: start },
-                    // Sealing writes to the chain, so it needs a wallet before anything else.
-                    { key: 'seal', label: 'seal', tone: 'yes' as const, disabled: true },
-                  ]),
+                : stage.kind === 'sealing'
+                  ? [{ key: 'sealing', label: `sealing… ${Math.round(stage.done * 100)}%`, disabled: true }]
+                  : stage.kind === 'sealed'
+                    ? [{ key: 'again', label: 'record again', onClick: start }]
+                    : stage.kind === 'done'
+                      ? [
+                          { key: 'again', label: 'record again', onClick: start },
+                          {
+                            key: 'seal',
+                            label: 'seal',
+                            tone: 'yes' as const,
+                            // Sealing sends the clip away, so it needs a wallet to file it under.
+                            onClick: () => sealClip(stage.clip),
+                            disabled: !publicKey,
+                          },
+                        ]
+                      : []),
         ...(cameraRun && missing === 'shell' ? [{ key: 'register', label: 'register', onClick: onRegister }] : []),
         ...(cameraRun ? [{ key: 'example', label: 'example', onClick: askAnother }] : []),
       ],
       back: log.length > 0 ? back : undefined,
     },
-    [stage.kind, longEnough, elapsed, mimeType, log.length, cameraRun, missing],
+    [stage.kind, longEnough, elapsed, mimeType, log.length, cameraRun, missing, publicKey],
     active,
   )
 
@@ -249,7 +280,7 @@ export function RecordPane({ active, onRegister }: { active: boolean; onRegister
         ),
       )}
 
-      {stage.kind === 'done' && (
+      {(stage.kind === 'done' || stage.kind === 'sealing' || stage.kind === 'sealed') && (
         <div className="term-block">
           <p className="term-head">clip</p>
           <dl className="term-rows">
@@ -260,9 +291,24 @@ export function RecordPane({ active, onRegister }: { active: boolean; onRegister
             <dt>sha256</dt>
             <dd>{stage.clip.sha256.slice(0, 16)}…</dd>
           </dl>
-          <p className="term-line term-dim">
-            nothing has left this browser yet. sealing it is the next thing to build.
-          </p>
+          {stage.kind === 'done' && (
+            <p className="term-line term-dim">nothing has left this browser yet.</p>
+          )}
+          {stage.kind === 'sealing' && (
+            <p className="term-line">
+              <span className="term-meter">{bar(stage.done)}</span> {Math.round(stage.done * 100)}%
+            </p>
+          )}
+          {stage.kind === 'sealed' && (
+            <>
+              <p className="term-line">
+                sealed. day {run.day} of shell {now.shell}.
+              </p>
+              <p className="term-line term-dim">
+                writing it on chain is the next thing to build.
+              </p>
+            </>
+          )}
         </div>
       )}
     </>
