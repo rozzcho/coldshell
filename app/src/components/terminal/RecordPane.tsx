@@ -170,7 +170,7 @@ export function RecordPane({ active }: { active: boolean }) {
                     // Sealing writes to the chain, so it needs a wallet before anything else.
                     { key: 'seal', label: 'seal', tone: 'yes' as const, disabled: true },
                   ]),
-        { key: 'example', label: 'example', onClick: askAnother },
+        ...(cameraRun ? [{ key: 'example', label: 'example', onClick: askAnother }] : []),
       ],
       back: log.length > 0 ? back : undefined,
     },
@@ -220,6 +220,11 @@ export function RecordPane({ active }: { active: boolean }) {
                     )}
                   </dd>
                 </dl>
+                {!publicKey && stage.kind !== 'error' && (
+                  <p className="term-line term-bad">
+                    connect a wallet first — a recording cannot be sealed without one.
+                  </p>
+                )}
                 {stage.kind !== 'error' && (
                   <div className="record-stage">
                     <video ref={videoRef} muted playsInline className="record-preview" />
@@ -248,13 +253,9 @@ export function RecordPane({ active }: { active: boolean }) {
             <dt>sha256</dt>
             <dd>{stage.clip.sha256.slice(0, 16)}…</dd>
           </dl>
-          {publicKey ? (
-            <p className="term-line term-dim">
-              nothing has left this browser yet. sealing it is the next thing to build.
-            </p>
-          ) : (
-            <p className="term-line term-bad">connect a wallet before sealing.</p>
-          )}
+          <p className="term-line term-dim">
+            nothing has left this browser yet. sealing it is the next thing to build.
+          </p>
         </div>
       )}
     </>
